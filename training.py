@@ -13,11 +13,18 @@ class Network:
                 node_weight = [float(x) for x in f.readline().split(' ')]
                 self.input_weight.append(node_weight)
             self.output_weight = f.readline().split(' ')
+        self.weight = []
+        self.weight.append(self.input_weight)
+        self.weight.append(self.output_weight)
         self.node = [[0.0] * self.input_length, [0.0] * self.hidden_length, [0.0] * self.output_length]
         self.node_input = [[0.0] * self.hidden_length, [0.0] * self.output_length]
+        self.alpha = 0.1
 
     def get_weight(self, i, j):
-        return self.input_weight[i][j]
+        return self.weight[i][j]
+
+    def set_weight(self, i, j, value):
+        self.weight[i][j] = value
 
     def set_node(self, i, j, value):
         self.node[i][j] = value
@@ -38,6 +45,12 @@ class Network:
     def sigmoid(x):
         return 1 / (1 + math.exp(x))
 
+    def save_network(self, path):
+        with open(path, 'w') as f:
+            for l in range(len(self.weight)):
+                f.write(str(self.weight[l]))
+                f.write("\n")
+
 
 def back_prop_learning(examples, network, epoch=1):
     """
@@ -48,7 +61,8 @@ def back_prop_learning(examples, network, epoch=1):
     :return:
     """
     L = 3
-    error = [[0.0] * network.get_node_width(0), [0.0] * network.get_node_width(1), [0.0] * network.get_node_width(2)]
+    output_layer_index = 2
+    error = [[0.0] * network.get_node_width(0), [0.0] * network.get_node_width(1), [0.0] * network.get_node_width(output_layer_index)]
     for k in range(epoch):
         for j in range(network.get_node_width(0)):
             network.set_node(0, j, examples[0][j])
@@ -60,8 +74,19 @@ def back_prop_learning(examples, network, epoch=1):
                 network.set_node_input(m, n, weight_sum)
                 actual_val = Network.sigmoid(weight_sum)
                 network.set_node(m, n, actual_val)
-        for j in range(network.get_node_width(2)):
-            a = network.get_node(2, j)
-            error[2][j] = a * (1 - a) * (examples[1][j] - a)
-        for j in range(start=L-1, stop=2, step=-1):
-            pass
+        for j in range(network.get_node_width(output_layer_index)):
+            a = network.get_node(output_layer_index, j)
+            error[output_layer_index][j] = a * (1 - a) * (examples[1][j] - a)
+        for j in range(start=L-1, stop=output_layer_index, step=-1):
+            for n in range(network.get_node_width(j)):
+                weight_sum = 0.0
+                for t in range(network.get_node_width(j+1)):
+                    weight_sum += network.get_weight(j, t) * error[output_layer_index][t]
+                a = network.get_node(j, n)
+                error[j][n] = a * (1 - a) * weight_sum
+        for l in range(output_layer_index):
+            for n in range(network.get_node_width(l)):
+                for j in range(network.get_node(l+1)):
+                    update_weight = network.get_weight(l, n) + network.alpha * network.get_node(l, n) * error[l+1][j]
+                    network.set_node(update_weight)
+    return network
