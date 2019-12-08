@@ -4,15 +4,15 @@ import math
 class Network:
     def __init__(self, file_path):
         with open(file_path, 'r') as f:
-            meta_data = f.readline().split(' ')
+            meta_data = f.readline()[:-1].split(' ')
             self.hidden_length = int(meta_data[0])
             self.input_length = int(meta_data[1])
             self.output_length = int(meta_data[2])
             self.input_weight = []
             for i in range(self.input_length):
-                node_weight = [float(x) for x in f.readline().split(' ')]
+                node_weight = [float(x) for x in f.readline()[:-1].split(' ')]
                 self.input_weight.append(node_weight)
-            self.output_weight = f.readline().split(' ')
+            self.output_weight = f.readline()[:-1].split(' ')
         self.weight = []
         self.weight.append(self.input_weight)
         self.weight.append(self.output_weight)
@@ -90,3 +90,19 @@ def back_prop_learning(examples, network, epoch=1):
                     update_weight = network.get_weight(l, n) + network.alpha * network.get_node(l, n) * error[l+1][j]
                     network.set_node(update_weight)
     return network
+
+
+def load_training(file_path):
+    examples = []
+    with open(file_path, 'r') as f:
+        meta_data = f.readline()[:-1].split(" ")
+        data_num = int(meta_data[0])
+        attrib_num = int(meta_data[1])
+        for i in range(data_num):
+            data = [float(x) for x in f.readline()[:-1].split(" ")]
+            examples.append([data[:attrib_num], data[attrib_num:]])
+    return examples
+
+
+if __name__ == "__main__":
+    pass
