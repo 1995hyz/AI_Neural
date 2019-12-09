@@ -21,7 +21,7 @@ class Network:
         self.weight.append(self.input_weight)
         self.weight.append(self.output_weight)
         self.node = [[0.0] * self.input_length, [0.0] * self.hidden_length, [0.0] * self.output_length]
-        self.alpha = 0.1
+        self.alpha = 0.05
 
     def get_weight(self, l, i, j):
         return self.weight[l][i][j]
@@ -51,6 +51,9 @@ class Network:
             for x in self.weight[1]:
                 f.write(" ".join([str("{0:.3f}".format(num)) for num in x]))
                 f.write("\n")
+
+    def get_output(self):
+        return self.node[len(self.node)-1]
 
 
 def back_prop_learning(examples, network, epoch=1):
@@ -114,7 +117,7 @@ def load_training(file_path):
 
 if __name__ == "__main__":
     # train_examples = load_training("wdbc.mini_train")
-    train_examples = load_training("wdbc.train")
-    my_network = Network("sample.NNWDBC.init")
+    train_examples = load_training("grades.train")
+    my_network = Network("sample.NNGrades.init")
     trained_network = back_prop_learning(train_examples, my_network, epoch=100)
     trained_network.save_network("trained_result")
