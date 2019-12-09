@@ -5,11 +5,10 @@ import copy
 
 def net_testing(examples, network):
     """
-
-    :param examples:
-    :param network:
-    :param epoch:
-    :return:
+    This function tests a neural network with testing pairs.
+    :param examples: Testing pairs.
+    :param network: A trained neural network object.
+    :return: A list of evaluation results.
     """
     L = 3
     evaluation = [0, 0, 0, 0]
@@ -53,8 +52,9 @@ def save_testing(result, file_path):
         f1 = (2 * precision * recall) / (precision + recall)
         outputs.append([r[0], r[1], r[2], r[3], overall_acc, precision, recall, f1])
     macro_data = []
-    for i in range(4):
+    for i in range(3):
         macro_data.append(sum([x[i+4] for x in outputs[:-1]]) / len(outputs[:-1]))
+    macro_data.append(2 * macro_data[1] * macro_data[2] / (macro_data[1] + macro_data[2]))
     result.append(macro_data)
     with open(file_path, "w") as f:
         for row in outputs[:-1]:
@@ -80,7 +80,10 @@ def load_testing(file_path):
 
 
 if __name__ == "__main__":
-    my_network = training.Network("sample.NNGrades.05.100.trained")
-    test_examples = load_testing("grades.test")
+    network_file_path = input("Please specify the file path of the neural network: ")
+    testing_file_path = input("Please specify the file path of testing data: ")
+    result_file_path = input("Please specify the file path to save the result: ")
+    my_network = training.Network(network_file_path)
+    test_examples = load_testing(testing_file_path)
     results = net_testing(test_examples, my_network)
-    save_testing(results, "tested_result")
+    save_testing(results, result_file_path)

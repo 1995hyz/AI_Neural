@@ -2,7 +2,7 @@ import math
 
 
 class Network:
-    def __init__(self, file_path):
+    def __init__(self, file_path, learning_rate=0.1):
         with open(file_path, 'r') as f:
             meta_data = f.readline().rstrip('\n').split(' ')
             self.hidden_length = int(meta_data[1])
@@ -10,7 +10,6 @@ class Network:
             self.output_length = int(meta_data[2])
             self.input_weight = []
             self.output_weight = []
-            output_weight_temp = []
             for i in range(self.hidden_length):
                 node_weight = [float(x) for x in f.readline().rstrip('\n').split(' ')]
                 self.input_weight.append(node_weight)
@@ -21,7 +20,7 @@ class Network:
         self.weight.append(self.input_weight)
         self.weight.append(self.output_weight)
         self.node = [[0.0] * self.input_length, [0.0] * self.hidden_length, [0.0] * self.output_length]
-        self.alpha = 0.05
+        self.alpha = learning_rate
 
     def get_weight(self, l, i, j):
         return self.weight[l][i][j]
@@ -58,11 +57,11 @@ class Network:
 
 def back_prop_learning(examples, network, epoch=1):
     """
-
-    :param examples:
-    :param network:
-    :param epoch:
-    :return:
+    This function implements back-propagates learning of a fully-connected neural network.
+    :param examples: Training example pairs.
+    :param network: Neural network object.
+    :param epoch: Number of epoch that a training will go though.
+    :return: Return a trained neural network object.
     """
     L = 3
     output_layer_index = 2
@@ -116,8 +115,12 @@ def load_training(file_path):
 
 
 if __name__ == "__main__":
-    # train_examples = load_training("wdbc.mini_train")
-    train_examples = load_training("grades.train")
-    my_network = Network("sample.NNGrades.init")
-    trained_network = back_prop_learning(train_examples, my_network, epoch=100)
-    trained_network.save_network("trained_result")
+    network_file_path = input("Please specify the file path of the initial neural network: ")
+    train_file_path = input("Please specify the file path of the training dataset: ")
+    test_file_path = input("Please specify the output file path: ")
+    epoch_num = int(input("Please specify the number of epoch during training: "))
+    rate = float(input("Please specify the learning rate of the network: "))
+    train_examples = load_training(train_file_path)
+    my_network = Network(network_file_path, rate)
+    trained_network = back_prop_learning(train_examples, my_network, epoch=epoch_num)
+    trained_network.save_network(test_file_path)
