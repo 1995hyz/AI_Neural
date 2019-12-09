@@ -40,15 +40,16 @@ class Network:
 
     @staticmethod
     def sigmoid(x):
-        return 1 / (1 + math.exp(x))
+        return 1 / (1 + math.exp(-x))
 
     def save_network(self, path):
         with open(path, 'w') as f:
+            f.write(str(self.input_length) + " " + str(self.hidden_length) + " " + str(self.output_length) + "\n")
             for x in self.weight[0]:
-                f.write(str(x))
+                f.write(" ".join([str("{0:.3f}".format(num)) for num in x]))
                 f.write("\n")
             for x in self.weight[1]:
-                f.write(str(x))
+                f.write(" ".join([str("{0:.3f}".format(num)) for num in x]))
                 f.write("\n")
 
 
@@ -71,7 +72,8 @@ def back_prop_learning(examples, network, epoch=1):
                 for n in range(network.get_node_width(m)):
                     weight_sum = 0.0
                     for t in range(network.get_node_width(m-1)):
-                        weight_sum += network.get_weight(m-1, n, t) * network.get_node(m-1, t)
+                        weight_sum += network.get_weight(m-1, n, t+1) * network.get_node(m-1, t)
+                    weight_sum += (-1) * network.get_weight(m-1, n, 0)
                     actual_val = Network.sigmoid(weight_sum)
                     network.set_node(m, n, actual_val)
 
@@ -79,18 +81,22 @@ def back_prop_learning(examples, network, epoch=1):
             for j in range(network.get_node_width(output_layer_index)):
                 a = network.get_node(output_layer_index, j)
                 error[output_layer_index][j] = a * (1 - a) * (example[1][j] - a)
-            for j in range(L-1, output_layer_index, -1):
+            for j in range(output_layer_index-1, 0, -1):
                 for n in range(network.get_node_width(j)):
                     weight_sum = 0.0
                     for t in range(network.get_node_width(j+1)):
-                        weight_sum += network.get_weight(j, t, n) * error[output_layer_index][t]
+                        weight_sum += network.get_weight(j, t, n+1) * error[output_layer_index][t]
                     a = network.get_node(j, n)
                     error[j][n] = a * (1 - a) * weight_sum
             for l in range(output_layer_index):
                 for n in range(network.get_node_width(l)):
                     for j in range(network.get_node_width(l+1)):
-                        update_weight = network.get_weight(l, j, n) + network.alpha * network.get_node(l, n) * error[l+1][j]
-                        network.set_weight(l, j, n, update_weight)
+                        update_weight = network.get_weight(l, j, n+1) + network.alpha * network.get_node(l, n) * error[l+1][j]
+                        network.set_weight(l, j, n+1, update_weight)
+            for l in range(output_layer_index):
+                for n in range(network.get_node_width(l+1)):
+                    update_bias = network.get_weight(l, n, 0) + network.alpha * (-1) * error[l+1][n]
+                    network.set_weight(l, n, 0, update_bias)
     return network
 
 
@@ -107,7 +113,8 @@ def load_training(file_path):
 
 
 if __name__ == "__main__":
-    train_examples = load_training("wdbc.mini_train")
+    # train_examples = load_training("wdbc.mini_train")
+    train_examples = load_training("wdbc.train")
     my_network = Network("sample.NNWDBC.init")
-    trained_network = back_prop_learning(train_examples, my_network)
+    trained_network = back_prop_learning(train_examples, my_network, epoch=100)
     trained_network.save_network("trained_result")
